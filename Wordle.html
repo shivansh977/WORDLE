@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wordle Clone</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121213;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #game {
+      display: table;
+      margin: 0 auto 20px auto;
+    }
+
+    .row {
+      display: table-row;
+    }
+
+    .tile {
+      display: table-cell;
+      width: 50px;
+      height: 50px;
+      margin: 2px;
+      border: 2px solid #3a3a3c;
+      vertical-align: middle;
+      text-align: center;
+      font-size: 2rem;
+      text-transform: uppercase;
+      background-color: #121213;
+      color: white;
+    }
+
+    .correct {
+      background-color: #538d4e !important;
+    }
+
+    .present {
+      background-color: #b59f3b !important;
+    }
+
+    .absent {
+      background-color: #3a3a3c !important;
+    }
+
+    input, button {
+      padding: 10px;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      margin: 10px;
+      width: 200px;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    #message {
+      margin-top: 10px;
+      font-size: 1.1rem;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Wordle Clone</h1>
+
+  <div id="game"></div>
+
+  <input type="text" id="guessInput" maxlength="5" placeholder="5-letter word">
+  <div>
+    <button onclick="submitGuess()">Submit</button>
+    <button onclick="restartGame()">Restart</button>
+  </div>
+
+  <div id="message"></div>
+
+  <script>
+    const wordList = [
+      "PLANT", "CRANE", "SMILE", "TRUCK", "BRING", "SWEET", "GRAPE", "BLINK", "SWORD", "SHAPE",
+      "MOUNT", "GLASS", "CHAIR", "NURSE", "PROXY", "DREAM", "FAITH", "SHARP", "DRIVE", "PRISM"
+    ];
+
+    let correctWord = "";
+    let currentRow = 0;
+    const maxAttempts = 6;
+
+    const game = document.getElementById("game");
+    const input = document.getElementById("guessInput");
+    const message = document.getElementById("message");
+
+    function getRandomWord() {
+      return wordList[Math.floor(Math.random() * wordList.length)];
+    }
+
+    function initGrid() {
+      game.innerHTML = "";
+      for (let i = 0; i < maxAttempts; i++) {
+        const row = document.createElement("div");
+        row.classList.add("row");
+        for (let j = 0; j < 5; j++) {
+          const tile = document.createElement("div");
+          tile.classList.add("tile");
+          row.appendChild(tile);
+        }
+        game.appendChild(row);
+      }
+    }
+
+    function submitGuess() {
+      const guess = input.value.toUpperCase();
+      if (guess.length !== 5) {
+        message.textContent = "Enter exactly 5 letters!";
+        return;
+      }
+
+      if (currentRow >= maxAttempts) return;
+
+      const row = game.children[currentRow].children;
+
+      const freq = {};
+      for (let ch of correctWord) {
+        freq[ch] = (freq[ch] || 0) + 1;
+      }
+
+      // First pass: correct letters
+      for (let i = 0; i < 5; i++) {
+        row[i].textContent = guess[i];
+        if (guess[i] === correctWord[i]) {
+          row[i].classList.add("correct");
+          freq[guess[i]]--;
+        }
+      }
+
+      // Second pass: present and absent
+      for (let i = 0; i < 5; i++) {
+        if (!row[i].classList.contains("correct")) {
+          if (correctWord.includes(guess[i]) && freq[guess[i]] > 0) {
+            row[i].classList.add("present");
+            freq[guess[i]]--;
+          } else {
+            row[i].classList.add("absent");
+          }
+        }
+      }
+
+      if (guess === correctWord) {
+        message.textContent = "🎉 Correct! You win!";
+        input.disabled = true;
+      } else {
+        currentRow++;
+        if (currentRow === maxAttempts) {
+          message.textContent = "😞 Game Over! Word was: " + correctWord;
+          input.disabled = true;
+        } else {
+          message.textContent = "";
+        }
+      }
+
+      input.value = "";
+    }
+
+    function restartGame() {
+      correctWord = getRandomWord();
+      currentRow = 0;
+      input.disabled = false;
+      input.value = "";
+      message.textContent = "";
+      initGrid();
+    }
+
+    // Initialize game on first load
+    restartGame();
+  </script>
+</body>
+</html>
